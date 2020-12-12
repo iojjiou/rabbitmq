@@ -27,9 +27,13 @@ public class TestConsumer {
             //连接
             Connection connection = connectionFactory.newConnection();
             //获取信道。信道连接队列
-            Channel channel = connection.createChannel();
+            final Channel channel = connection.createChannel();
           //  依然绑定队列（这里必须和消费者队列参数保持一致，否则时找不到对应消费者队列的）
             channel.queueDeclare("one",false,false,false,null);
+
+            //每次处理一个,处理自动确认,（自动确认呢，会平均消费，会导致，消费者死，丢失未消费消息）
+            //basicConsumer arg2 = false;
+            //channel.basicQos(1);
 
             /**
              * 消费消息
@@ -47,6 +51,10 @@ public class TestConsumer {
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                     //回调方法内容，（这里时异步的，如果关闭了，连接，可能无法执行到代码，就被关闭了）
                     System.out.println("acceptermes"+new String(body));
+
+//                    //手动确认,每次确认一个，手动确认呢确认了之后，就会从队列删除，保证   不丢失消息，多个消费者，选哟参数1确认统一标签，默认确认一个，完成能者多劳
+//                    //false 手动确认消息
+//                    channel.basicAck(envelope.getDeliveryTag(),false);
                 }
             });
 
